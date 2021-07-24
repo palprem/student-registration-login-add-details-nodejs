@@ -4,6 +4,8 @@ const app = express();
 const path = require('path');
 const hbs = require('hbs');
 var cookie = require('cookie');
+const cookieParser = require('cookie-parser');
+const auth = require('./middleware/auth')
 
 //password in/cr ption 
 const bcrypt= require('bcryptjs');
@@ -35,7 +37,7 @@ const static_path = path.join(__dirname, "../public");
 const template_path = path.join(__dirname, "../templates/views");
 const partials_path = path.join(__dirname, "../templates/partials");
 
-app.use(express.static(static_path));
+
 app.set("view engine", "hbs");
 app.set("views", template_path);
 hbs.registerPartials(partials_path);
@@ -43,8 +45,10 @@ hbs.registerPartials(partials_path);
 // use json
 app.use(express.static(static_path));
 app.use(express.urlencoded({extended:false}));
+app.use(cookieParser());
+
 // all method
-app.get("/", (req, res)=>{
+app.get("/",auth, async(req, res)=>{
     res.render("index");
 });
 
@@ -62,32 +66,36 @@ app.post("/login", async(req, res)=>{
         const decri = await decriptPass(loginBodyPassword, hashPassword)
         //genrate token
         const token = await userDetaile.generateAuthToken();
-        console.log("token")
+
+        // create cookie 
+        res.cookie("jwt", token,{
+            // expires:new Date(Date.now() + 60000),
+            httpOnly:true
+        })
         res.status(201).render("index");
     }
     catch{
         res.status(400).render("login");
     }
-    // const userDtata= Register.findOne({ email: req.body.email })
-    // .then((result)=>{
-    //     if(result!=null){
-    //         const relPass  = req.body.password;
-    //         const hes = result.password;
-    //         if(decriptPass(relPass, hes)){
-    //             const token =  userEmail.generateAuthToken();
-    //             console.log("token:-",token)
-    //             res.status(201).render("index");
-    //             //TODO: to set cookies
-    //         }
-    //         else{
-    //         res.status(400).render("login");
-    //         }
-    //     }
-    //     else{
-    //         res.status(400).render("login");
-    //     }
-    // }).catch(err=>console.log("error:",err));
+});
 
+//logout
+app.get("/logout",auth, async(req, res)=>{
+    try {
+        console.log(req.userData);
+        
+        req.userData.tokens = req.userData.tokens.filter((currentElement)=>{
+            return currentElement.token !==req.token
+        });
+
+        res.clearCookie("jwt");
+        console.log("logout sucessfully");
+
+        await req.userData.save();
+        res.render("login");
+    } catch (error) {
+        res.status(500).send(error);
+    }
 });
 
 app.get("/register", (req, res)=>{
@@ -109,12 +117,11 @@ app.post("/register", async(req, res)=>{
     const token = await data.generateAuthToken();
     console.log("token:-",token)
 
-    // cookie
-    // res.cookie("jwt", token,{
-    //     expires:new Date(Date.now() + 30000),
-    //     httpOnly:true
-    // })
-    // console.log(cookie);
+    // create cookie 
+    res.cookie("jwt", token,{
+        // expires:new Date(Date.now() + 30000),
+        httpOnly:true
+    })
 
     data.save()
     .then((result) => {
@@ -129,12 +136,6 @@ app.get("/logout", (req, res)=>{
     res.render("index");
 });
 
-// const jwt = require('jsonwebtoken');
-// const createToken = ()=>{
-//     const token = jwt.sign({_id:"sdvnsvkjsvkc57s4446464"}, "pregmkdklndfvndfjvndfjndfvnfjvdvsvd");
-//     console.log(token);
-// }
-// createToken()
 
 app.listen(port, ()=>{
     console.log(`server is running at PORT : ${port}`)

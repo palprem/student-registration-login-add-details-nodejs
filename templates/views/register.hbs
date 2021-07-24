@@ -91,6 +91,17 @@
             width: 50%;
             cursor: pointer;
         }
+         .btnLogin {
+            border: 1px wheat solid;
+            border-radius: 1.5rem;
+            padding-left: 20%;
+            padding-right: 20%;
+            padding-top: 2%;
+            padding-bottom: 2%;
+            background: #0062cc;
+            color: #fff;
+            font-weight: 600;
+        }
 
         .register .nav-tabs {
             margin-top: 3%;
@@ -132,14 +143,16 @@
 </head>
 
 <body>
-    {{>navbar}}
+    {{!-- {{>navbar}} --}}
     <div class="container register my-5">
         <div class="row">
             <div class="col-md-3 register-left">
                 <img src="https://image.ibb.co/n7oTvU/logo_white.png" alt="" />
                 <h3>Welcome</h3>
                 <p>You are 30 seconds away from earning your own money!</p>
-                <a class="btnRegister mx-5" href="/login">Login</a>
+                <div class="">
+                <a class="btnLogin " href="/login">Login</a>
+                </div>
             </div>
             <div class="col-md-9 register-right">
                 <div class="tab-content" id="myTabContent">
